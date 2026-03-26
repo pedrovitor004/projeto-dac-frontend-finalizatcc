@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, X, Loader2 } from "lucide-react"; // Importado Loader2 para o spinner
 import toast from "react-hot-toast";
 import logoImg from "../assets/logo.png";
 import successIcon from "../assets/sucess.png";
@@ -8,10 +8,10 @@ import warningIcon from "../assets/warning.png";
 import errorIcon from "../assets/error.png";
 
 export default function Login() {
-  const [email, setEmail] = useState(""); // Alterado de 'user' para 'email' para clareza
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Feedback de carregamento
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const notify = (message, type = "success") => {
@@ -55,38 +55,27 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     if (!email || !password) {
       notify("Digite um email e senha!", "warning");
       return;
     }
 
     setIsLoading(true);
-
     try {
-      // IMPORTANTE: Substitua pela sua URL do Spring Boot
       const response = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Armazena o JWT real retornado pelo Spring Security
         localStorage.setItem("token", data.token);
-
-        // Se o seu backend retornar o nome ou tipo do usuário, salve também
         if (data.name) localStorage.setItem("userName", data.name);
-
         notify("Login efetuado com sucesso!", "success");
         setTimeout(() => navigate("/dashboard"), 1500);
       } else {
-        // Trata erros de credenciais (401/403) enviados pelo Spring
         notify(data.message || "Email ou senha inválidos!", "error");
       }
     } catch (error) {
@@ -99,7 +88,8 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 font-poppins antialiased">
-      <div className="bg-ifpb-green w-full max-w-[400px] p-12 rounded-[50px] card-shadow flex flex-col items-center transform transition-all">
+      {/* CARD com efeito de escala suave e sombra profunda */}
+      <div className="animate-fade-in-up bg-ifpb-green w-full max-w-[400px] p-12 rounded-[50px] card-shadow flex flex-col items-center transform transition-all hover:scale-[1.01] duration-300">
         <div className="mb-10 drop-shadow-lg">
           <img src={logoImg} alt="Logo" className="w-32 h-auto" />
         </div>
@@ -116,7 +106,8 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 
-                         input-inner-shadow focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-300 disabled:opacity-70"
+                         input-inner-shadow focus:ring-2 focus:ring-white/40 focus:scale-[1.02] transition-all 
+                         placeholder:text-gray-300 disabled:opacity-70"
             />
           </div>
 
@@ -132,7 +123,8 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 className="w-full bg-white h-11 px-5 pr-12 rounded-2xl border-none outline-none text-gray-700 
-                           input-inner-shadow focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-300 disabled:opacity-70"
+                           input-inner-shadow focus:ring-2 focus:ring-white/40 focus:scale-[1.02] transition-all 
+                           placeholder:text-gray-300 disabled:opacity-70"
               />
               <button
                 type="button"
@@ -144,12 +136,11 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Onde estava o parágrafo de recuperar senha */}
           <div className="text-center pt-1">
-            <Link to="/recuperar-senha" data-tooltip-id="recover-hint">
-              <p className="text-white text-[12px] font-light opacity-80 hover:opacity-100 transition-opacity cursor-pointer">
+            <Link to="/recuperar-senha">
+              <p className="text-white text-[12px] font-light opacity-80 hover:opacity-100 hover:underline transition-all cursor-pointer">
                 Esqueceu sua senha?{" "}
-                <span className="font-semibold underline">Recupere aqui</span>
+                <span className="font-semibold">Recupere aqui</span>
               </p>
             </Link>
           </div>
@@ -158,9 +149,18 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-figma w-full max-w-[200px] h-11 text-white text-[15px] font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-figma w-full max-w-[200px] h-11 text-white text-[15px] font-bold rounded-full 
+                         disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                         hover:shadow-lg active:scale-95 transition-all"
             >
-              {isLoading ? "Entrando..." : "Entrar"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Entrando...</span>
+                </>
+              ) : (
+                "Entrar"
+              )}
             </button>
           </div>
         </form>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, ChevronDown, X } from "lucide-react";
+import { Eye, EyeOff, ChevronDown, X, Loader2 } from "lucide-react"; // Importado Loader2
 import toast from "react-hot-toast";
 import logoImg from "../assets/logo.png";
 import successIcon from "../assets/sucess.png";
@@ -15,7 +15,7 @@ export default function Cadastro() {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Feedback de carregamento
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const notify = (message, type = "success") => {
@@ -62,7 +62,6 @@ export default function Cadastro() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Validação básica no Front
     if (
       !formData.name ||
       !formData.email ||
@@ -81,7 +80,6 @@ export default function Cadastro() {
     setIsLoading(true);
 
     try {
-      // Chamada para o endpoint do Spring Boot
       const response = await fetch("http://localhost:8080/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,11 +88,9 @@ export default function Cadastro() {
 
       if (response.ok) {
         notify("Cadastro efetuado com sucesso!", "success");
-        // Delay maior para o usuário ler a mensagem antes de ir pro login
         setTimeout(() => navigate("/"), 2200);
       } else {
         const errorData = await response.json();
-        // O Spring costuma retornar o erro no campo 'message'
         notify(errorData.message || "Erro ao realizar cadastro", "error");
       }
     } catch (error) {
@@ -107,7 +103,8 @@ export default function Cadastro() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 font-poppins antialiased">
-      <div className="bg-ifpb-green w-full max-w-[400px] p-10 rounded-[50px] card-shadow flex flex-col items-center">
+      {/* CARD com efeito de escala suave ao passar o mouse */}
+      <div className="animate-fade-in-up bg-ifpb-green w-full max-w-[400px] p-10 rounded-[50px] card-shadow flex flex-col items-center transform transition-all hover:scale-[1.01] duration-300">
         <div className="mb-8 drop-shadow-lg">
           <img src={logoImg} alt="Logo" className="w-28 h-auto" />
         </div>
@@ -122,7 +119,9 @@ export default function Cadastro() {
               type="text"
               placeholder="Digite seu nome"
               disabled={isLoading}
-              className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 input-inner-shadow font-normal focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-300 disabled:opacity-70"
+              className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 
+                         input-inner-shadow focus:ring-2 focus:ring-white/40 focus:scale-[1.02] transition-all 
+                         placeholder:text-gray-300 disabled:opacity-70"
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
@@ -138,7 +137,9 @@ export default function Cadastro() {
               type="email"
               placeholder="seuemail@ifpb.edu.br"
               disabled={isLoading}
-              className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 input-inner-shadow font-normal focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-300 disabled:opacity-70"
+              className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 
+                         input-inner-shadow focus:ring-2 focus:ring-white/40 focus:scale-[1.02] transition-all 
+                         placeholder:text-gray-300 disabled:opacity-70"
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
@@ -153,7 +154,9 @@ export default function Cadastro() {
             <div className="relative group">
               <select
                 disabled={isLoading}
-                className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 input-inner-shadow font-normal appearance-none cursor-pointer focus:ring-2 focus:ring-white/30 transition-all disabled:opacity-70"
+                className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 
+                           input-inner-shadow appearance-none cursor-pointer focus:ring-2 focus:ring-white/40 
+                           focus:scale-[1.02] transition-all disabled:opacity-70"
                 onChange={(e) =>
                   setFormData({ ...formData, type: e.target.value })
                 }
@@ -180,7 +183,9 @@ export default function Cadastro() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Mínimo 9 dígitos"
                 disabled={isLoading}
-                className="w-full bg-white h-11 px-5 pr-12 rounded-2xl border-none outline-none text-gray-700 input-inner-shadow font-normal focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-300 disabled:opacity-70"
+                className="w-full bg-white h-11 px-5 pr-12 rounded-2xl border-none outline-none text-gray-700 
+                           input-inner-shadow focus:ring-2 focus:ring-white/40 focus:scale-[1.02] transition-all 
+                           placeholder:text-gray-300 disabled:opacity-70"
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
@@ -195,14 +200,23 @@ export default function Cadastro() {
             </div>
           </div>
 
-          {/* Botão Padronizado */}
+          {/* Botão com Spinner e Feedback Visual */}
           <div className="flex justify-center pt-4">
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-figma text-white text-[15px] font-bold px-14 py-2.5 rounded-full min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-figma text-white text-[15px] font-bold px-14 py-2.5 rounded-full min-w-[200px] 
+                         disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                         hover:shadow-lg active:scale-95 transition-all"
             >
-              {isLoading ? "Cadastrando..." : "Cadastrar"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Cadastrando...</span>
+                </>
+              ) : (
+                "Cadastrar"
+              )}
             </button>
           </div>
         </form>

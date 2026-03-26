@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react"; // Importado Loader2 para o spinner
 import toast from "react-hot-toast";
 import logoImg from "../assets/logo.png";
 import successIcon from "../assets/sucess.png";
@@ -86,16 +86,16 @@ export default function RecuperarSenha() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 font-poppins antialiased">
-      {/* TEXTO FORA DO CARD - Verde Escuro (ifpb-dark) */}
-      <div className="text-center mb-8">
-        <p className="text-ifpb-dark text-[14px] font-medium leading-tight">
+      {/* TEXTO FORA DO CARD */}
+      <div className="text-center mb-8 transform transition-all">
+        <p className="animation-delay-200 text-ifpb-dark text-[14px] font-medium leading-tight">
           Para recuperar a senha precisamos <br />
           que digite o <span className="font-bold">seu email abaixo!</span>
         </p>
       </div>
 
-      {/* CARD PRINCIPAL */}
-      <div className="bg-ifpb-green w-full max-w-[400px] p-12 rounded-[50px] card-shadow flex flex-col items-center">
+      {/* CARD PRINCIPAL com hover e transição */}
+      <div className="animate-fade-in-up bg-ifpb-green w-full max-w-[400px] p-12 rounded-[50px] card-shadow flex flex-col items-center transform transition-all hover:scale-[1.01] duration-300">
         <div className="mb-10 drop-shadow-lg">
           <img src={logoImg} alt="Logo" className="w-32 h-auto" />
         </div>
@@ -112,7 +112,8 @@ export default function RecuperarSenha() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               className="w-full bg-white h-11 px-5 rounded-2xl border-none outline-none text-gray-700 
-                         input-inner-shadow focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-300 disabled:opacity-70"
+                         input-inner-shadow focus:ring-2 focus:ring-white/40 focus:scale-[1.02] transition-all 
+                         placeholder:text-gray-300 disabled:opacity-70"
             />
           </div>
 
@@ -120,9 +121,18 @@ export default function RecuperarSenha() {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-figma w-full max-w-[180px] h-11 text-white text-[15px] font-bold rounded-full disabled:opacity-50"
+              className="btn-figma w-full max-w-[180px] h-11 text-white text-[15px] font-bold rounded-full 
+                         disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                         hover:shadow-lg active:scale-95 transition-all"
             >
-              {isLoading ? "Enviando..." : "Enviar"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Enviando...</span>
+                </>
+              ) : (
+                "Enviar"
+              )}
             </button>
           </div>
         </form>
