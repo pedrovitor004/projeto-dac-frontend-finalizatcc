@@ -1,16 +1,41 @@
-# React + Vite
+# Finaliza.TCC - Frontend 🎓
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### 🚀 Introdução
 
-Currently, two official plugins are available:
+O **Finaliza.TCC** é uma plataforma desenvolvida para facilitar a gestão e o acompanhamento de Trabalhos de Conclusão de Curso. O sistema permite que alunos, professores e coordenação interajam de forma organizada, garantindo que os prazos e requisitos acadêmicos sejam cumpridos com eficiência.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🛠️ Tecnologias Utilizadas
 
-## Expanding the ESLint configuration
+- **React + Vite**: Base do projeto para alta performance no desenvolvimento.
+- **Tailwind CSS**: Estilização baseada no design do Figma.
+- **Lucide React**: Biblioteca de ícones leves e modernos.
+- **React Router Dom**: Gerenciamento de rotas e navegação entre páginas.
+- **React Hot Toast**: Sistema de alertas e notificações personalizadas.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+### 💻 Como rodar o projeto em outra máquina
+
+#### 1. Pré-requisitos
+
+Certifique-se de ter instalado:
+
+- **Node.js** (versão 18+)
+- **npm** ou **yarn**
+
+#### 2. Instalação
+
+```bash
+# Clone o repositório
+git clone [https://github.com/pedrovitor004/projeto-dac-frontend-finalizatcc.git](https://github.com/pedrovitor004/projeto-dac-frontend-finalizatcc.git)
+
+# Acesse a pasta
+cd projeto-dac-frontend-finalizatcc
+
+# Instale as dependências
+npm install
+```
