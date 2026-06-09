@@ -4,6 +4,8 @@ import {
   BookOpen,
   Calendar,
   CheckSquare,
+  ChevronsLeft,
+  ChevronsRight,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -50,34 +52,69 @@ const menus = {
   ],
 };
 
-function Sidebar({ currentPath, menu, user, onLogout, onNavigate }) {
+function Sidebar({
+  collapsed = false,
+  currentPath,
+  menu,
+  user,
+  onLogout,
+  onNavigate,
+  onToggleCollapse,
+}) {
   return (
-    <aside className="flex h-full w-64 flex-col bg-[#23731f] text-white shadow-xl">
-      <div className="flex h-16 items-center border-b border-white/10 bg-[#1f661c] px-4">
+    <aside
+      className={`flex h-full flex-col border-r border-slate-200 bg-[#f8faf7] text-slate-800 shadow-xl transition-[width] duration-200 ${
+        collapsed ? "w-20" : "w-64"
+      }`}
+    >
+      <div className="border-b border-slate-200 px-3 py-4">
         <Link
           to="/"
           onClick={onNavigate}
-          className="flex min-w-0 items-center gap-3"
+          className={`flex min-w-0 items-center gap-3 ${
+            collapsed ? "justify-center" : ""
+          }`}
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm">
             <img
               src={finalizaTccLogo}
               alt="Finaliza TCC"
-              className="h-7 w-7 object-contain"
+              className="h-8 w-8 object-contain"
             />
           </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-bold">
+          <span className={`min-w-0 ${collapsed ? "hidden" : ""}`}>
+            <span className="block truncate text-sm font-bold text-slate-950">
               Finaliza TCC
             </span>
-            <span className="block truncate text-xs text-white/65">
-              {user?.tipo || "Sistema"}
+            <span className="block truncate text-xs text-slate-500">
+              {user?.tipo || "Sistema academico"}
             </span>
           </span>
         </Link>
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title={collapsed ? "Expandir menu" : "Recolher menu"}
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            className={`mt-4 hidden h-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#359830]/35 hover:text-[#23731f] md:flex ${
+              collapsed ? "mx-auto w-10" : "w-full gap-2 px-3"
+            }`}
+          >
+            {collapsed ? <ChevronsRight size={17} /> : <ChevronsLeft size={17} />}
+            {!collapsed && <span className="text-sm font-semibold">Recolher</span>}
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <p
+          className={`px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 ${
+            collapsed ? "sr-only" : ""
+          }`}
+        >
+          Navegacao
+        </p>
         {menu.map((item) => {
           const Icon = item.icone;
           const active = currentPath === item.path;
@@ -87,27 +124,61 @@ function Sidebar({ currentPath, menu, user, onLogout, onNavigate }) {
               key={item.path}
               to={item.path}
               onClick={onNavigate}
-              className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-semibold transition ${
+              title={collapsed ? item.titulo : undefined}
+              className={`flex h-10 items-center rounded-lg text-sm font-semibold transition ${
                 active
-                  ? "bg-white text-[#23731f] shadow-sm"
-                  : "text-white/82 hover:bg-white/10 hover:text-white"
-              }`}
+                  ? "border border-[#359830]/25 bg-white text-[#1f661c] shadow-sm"
+                  : "text-slate-600 hover:bg-white hover:text-slate-950 hover:shadow-sm"
+              } ${collapsed ? "justify-center px-0" : "gap-3 px-3"}`}
             >
-              <Icon size={19} className="shrink-0" />
-              <span className="truncate">{item.titulo}</span>
+              <Icon
+                size={19}
+                className={`shrink-0 ${
+                  active ? "text-[#2f8f2b]" : "text-slate-400"
+                }`}
+              />
+              <span className={`truncate ${collapsed ? "hidden" : ""}`}>
+                {item.titulo}
+              </span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-white/10 bg-[#1f661c] p-3">
+      <div className="border-t border-slate-200 p-3">
+        <div
+          className={`mb-3 rounded-lg border border-[#359830]/25 bg-[#2f8f2b] text-white shadow-sm ${
+            collapsed
+              ? "flex h-11 items-center justify-center p-0"
+              : "px-3 py-2"
+          }`}
+          title={collapsed ? user?.nome || "Usuario" : undefined}
+        >
+          {collapsed ? (
+            <span className="text-sm font-bold">
+              {user?.nome?.substring(0, 1) || "U"}
+            </span>
+          ) : (
+            <>
+              <p className="truncate text-sm font-semibold">
+                {user?.nome || "Usuario"}
+              </p>
+              <p className="mt-0.5 text-xs capitalize text-white/75">
+                {user?.tipo?.toLowerCase() || "perfil"}
+              </p>
+            </>
+          )}
+        </div>
         <button
           type="button"
           onClick={onLogout}
-          className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
+          title={collapsed ? "Sair" : undefined}
+          className={`flex h-10 w-full items-center rounded-lg text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-950 hover:shadow-sm ${
+            collapsed ? "justify-center px-0" : "gap-3 px-3"
+          }`}
         >
-          <LogOut size={19} className="shrink-0" />
-          <span>Sair</span>
+          <LogOut size={19} className="shrink-0 text-slate-400" />
+          <span className={collapsed ? "hidden" : ""}>Sair</span>
         </button>
       </div>
     </aside>
@@ -115,6 +186,7 @@ function Sidebar({ currentPath, menu, user, onLogout, onNavigate }) {
 }
 
 export default function Layout({ children }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -129,13 +201,15 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-slate-100 text-slate-900">
+    <div className="flex h-screen bg-[#f6f8f5] text-slate-900">
       <div className="hidden md:block">
         <Sidebar
+          collapsed={sidebarCollapsed}
           currentPath={location.pathname}
           menu={menu}
           user={user}
           onLogout={handleLogout}
+          onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
         />
       </div>
 
@@ -164,7 +238,7 @@ export default function Layout({ children }) {
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-[#359830]/35 hover:text-[#23731f] md:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label="Abrir menu"
             >
@@ -189,7 +263,7 @@ export default function Layout({ children }) {
                 {user?.tipo?.toLowerCase()}
               </p>
             </div>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#eef8ed] text-sm font-bold text-[#2a7a26]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#359830]/20 bg-[#eef8ed] text-sm font-bold text-[#2a7a26]">
               {user?.tipo?.substring(0, 2) || "FT"}
             </div>
             <button

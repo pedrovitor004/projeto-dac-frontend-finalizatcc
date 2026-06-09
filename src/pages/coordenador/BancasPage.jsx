@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { confirmToast } from "../../lib/toast";
 import {
   ApiError,
   createAvaliador,
@@ -283,15 +284,20 @@ export default function BancasPage() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Excluir esta banca?")) return;
-
-    try {
-      await deleteBanca(id);
-      toast.success("Banca excluida.");
-      await refresh();
-    } catch (e) {
-      toast.error(errMessage(e, "Erro ao excluir banca."));
-    }
+    confirmToast({
+      title: "Excluir banca?",
+      message: "Esta acao remove o agendamento da banca selecionada.",
+      confirmText: "Excluir",
+      onConfirm: async () => {
+        try {
+          await deleteBanca(id);
+          toast.success("Banca excluida.");
+          await refresh();
+        } catch (e) {
+          toast.error(errMessage(e, "Erro ao excluir banca."));
+        }
+      },
+    });
   }
 
   async function adicionarAvaliador() {

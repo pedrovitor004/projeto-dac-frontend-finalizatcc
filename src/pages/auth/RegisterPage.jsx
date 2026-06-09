@@ -32,19 +32,18 @@ const initialForm = {
 };
 
 const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-[#359830] focus:ring-2 focus:ring-[#359830]/20 disabled:bg-slate-100";
+  "h-10 w-full rounded-lg border border-white/35 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-white focus:ring-4 focus:ring-white/20 disabled:bg-white/80";
 
 function Field({ icon, label, children }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700">
+      <span className="mb-1.5 block text-sm font-medium text-white/90">
         {label}
       </span>
       <div className="relative">
         {React.createElement(icon, {
           size: 18,
-          className:
-            "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400",
+          className: "absolute left-3 top-1/2 -translate-y-1/2 text-[#2f8f2b]",
         })}
         {children}
       </div>
@@ -131,84 +130,103 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="grid min-h-screen lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="hidden bg-[#359830] px-12 py-8 text-white lg:flex lg:flex-col lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white">
+    <main className="auth-screen min-h-screen bg-[#f6f8f5] text-slate-900">
+      <div className="grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
+        <section className="auth-hero-panel relative hidden overflow-hidden border-r border-slate-200 bg-[#f8faf7] px-10 py-8 lg:flex lg:flex-col">
+          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d32f2f_0_15%,#359830_15%_58%,#2f855a_58%_100%)]" />
+          <div className="flex items-center gap-4">
+            <span className="flex h-20 w-20 items-center justify-center rounded-lg border border-[#359830]/20 bg-white shadow-sm">
               <img
                 src={finalizaTccLogo}
                 alt="Finaliza TCC"
-                className="h-8 w-8 object-contain"
+                className="h-16 w-16 object-contain"
               />
-            </div>
+            </span>
             <div>
-              <p className="text-lg font-bold leading-none">Finaliza TCC</p>
-              <p className="mt-1 text-sm text-white/75">Gestao academica</p>
+              <p className="text-2xl font-bold leading-none text-[#23731f]">
+                Finaliza TCC
+              </p>
+              <p className="mt-2 text-base font-medium text-[#2f8f2b]">
+                Gestao academica de TCC
+              </p>
             </div>
           </div>
 
-          <div className="max-w-xl">
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-white/12">
-              <UserPlus size={30} />
+          <div className="flex flex-1 items-center">
+            <div className="max-w-lg">
+              <p className="text-sm font-semibold uppercase tracking-wide text-[#2a7a26]">
+                Primeiro acesso
+              </p>
+              <h1 className="mt-3 text-4xl font-bold leading-tight text-slate-950">
+                Cadastro pensado para a rotina de TCC do IFPB.
+              </h1>
+              <p className="mt-5 text-base leading-7 text-slate-600">
+                O vinculo academico organiza as informacoes certas para cada
+                perfil: estudante, professor orientador ou coordenacao.
+              </p>
             </div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-white/70">
-              Novo usuario
-            </p>
-            <h1 className="mt-3 text-4xl font-bold leading-tight">
-              Crie seu acesso e conecte-se ao fluxo de TCCs.
-            </h1>
-            <p className="mt-5 text-base leading-7 text-white/80">
-              O perfil selecionado define os dados academicos necessarios para
-              conectar orientacoes, TCCs, submissao e bancas.
-            </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 border-t border-white/15 pt-6 text-sm text-white/80">
-            <span>Alunos</span>
-            <span>Professores</span>
-            <span>Orientacoes</span>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            {[
+              { label: "Aluno", icon: GraduationCap },
+              { label: "Professor", icon: Briefcase },
+              { label: "Coordenação", icon: ShieldCheck },
+            ].map(({ label, icon }) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#359830]/35 hover:shadow-md"
+              >
+                {React.createElement(icon, {
+                  size: 17,
+                  className: "shrink-0 text-[#2f8f2b]",
+                })}
+                <span className="truncate">{label}</span>
+              </div>
+            ))}
           </div>
         </section>
 
         <section className="flex items-center justify-center px-5 py-6 sm:px-8">
-          <div className="w-full max-w-xl">
-            <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#359830]/25 bg-white">
-                <img
-                  src={finalizaTccLogo}
-                  alt="Finaliza TCC"
-                  className="h-8 w-8 object-contain"
-                />
+          <div className="w-full max-w-2xl">
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3 lg:hidden">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#359830]/20 bg-white shadow-sm">
+                  <img
+                    src={finalizaTccLogo}
+                    alt="Finaliza TCC"
+                    className="h-8 w-8 object-contain"
+                  />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-bold text-slate-950">
+                    Finaliza TCC
+                  </p>
+                  <p className="truncate text-sm text-slate-500">
+                    Gestao academica de TCC
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-lg font-bold text-[#2a7a26]">
-                  Finaliza TCC
-                </p>
-                <p className="text-sm text-slate-500">Gestao academica</p>
-              </div>
-            </div>
 
-            <div className="mb-5 hidden items-center justify-between lg:flex">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2a7a26] hover:text-[#359830]"
+                className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-[#359830]/40 hover:text-[#23731f]"
               >
                 <ArrowLeft size={16} />
-                Voltar ao login
+                Login
               </Link>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="auth-card-enter auth-form-card rounded-lg border border-[#2f8f2b] bg-[#2f8f2b] p-5 text-white shadow-[0_30px_90px_rgb(31_102_28/0.28)] sm:p-6">
               <div className="mb-5">
-                <p className="text-sm font-semibold uppercase tracking-wide text-[#359830]">
+                <p className="text-sm font-semibold uppercase tracking-wide text-white/80">
                   Criar conta
                 </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                <h2 className="mt-2 text-2xl font-bold text-white">
                   Informe seus dados
                 </h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Selecione o vinculo e preencha os campos obrigatorios.
+                <p className="mt-2 text-sm leading-6 text-white/78">
+                  Selecione seu vinculo para abrir os campos correspondentes.
                 </p>
               </div>
 
@@ -227,7 +245,7 @@ export default function RegisterPage() {
                     />
                   </Field>
 
-                  <Field icon={Mail} label="E-mail institucional">
+                  <Field icon={Mail} label="E-mail de acesso">
                     <input
                       name="email"
                       type="email"
@@ -242,7 +260,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <span className="mb-2 block text-sm font-medium text-slate-700">
+                  <span className="mb-2 block text-sm font-medium text-white/90">
                     Tipo de vinculo
                   </span>
                   <div className="grid grid-cols-2 gap-3">
@@ -272,8 +290,8 @@ export default function RegisterPage() {
                           }
                           className={`flex h-11 items-center justify-center gap-2 rounded-lg border text-sm font-semibold transition ${
                             active
-                              ? "border-[#359830] bg-[#359830] text-white"
-                              : "border-slate-300 bg-white text-slate-600 hover:border-[#359830] hover:text-[#2a7a26]"
+                              ? "border-white bg-white text-[#1f661c] shadow-sm"
+                              : "border-white/35 bg-white/10 text-white hover:bg-white/18"
                           }`}
                         >
                           {React.createElement(icon, { size: 17 })}
@@ -350,7 +368,7 @@ export default function RegisterPage() {
                         required
                         value={formData.titulacao}
                         onChange={handleChange}
-                        className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-[#359830] focus:ring-2 focus:ring-[#359830]/20 disabled:bg-slate-100"
+                        className="h-10 w-full rounded-lg border border-white/35 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-white focus:ring-4 focus:ring-white/20 disabled:bg-white/80"
                         disabled={loading}
                       >
                         <option value="">Selecione</option>
@@ -360,7 +378,7 @@ export default function RegisterPage() {
                       </select>
                     </Field>
 
-                    <label className="sm:col-span-2 flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    <label className="flex items-start gap-3 rounded-lg border border-white/25 bg-white/10 px-4 py-3 sm:col-span-2">
                       <input
                         name="coordenador"
                         type="checkbox"
@@ -370,11 +388,11 @@ export default function RegisterPage() {
                         className="mt-1 h-4 w-4 rounded border-slate-300 text-[#359830] focus:ring-[#359830]"
                       />
                       <span className="min-w-0">
-                        <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                          <ShieldCheck size={16} className="text-[#359830]" />
+                        <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                          <ShieldCheck size={16} className="text-white" />
                           Professor coordenador
                         </span>
-                        <span className="mt-1 block text-xs leading-5 text-slate-500">
+                        <span className="mt-1 block text-xs leading-5 text-white/72">
                           Marque esta opcao para criar a conta com acesso de
                           coordenador.
                         </span>
@@ -414,7 +432,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#359830] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2a7a26] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-[#23731f] shadow-sm transition hover:bg-[#eef8ed] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? (
                     <>
@@ -429,16 +447,6 @@ export default function RegisterPage() {
                   )}
                 </button>
               </form>
-
-              <div className="mt-5 border-t border-slate-100 pt-4 text-center text-sm">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-1.5 font-semibold text-[#2a7a26] hover:text-[#359830]"
-                >
-                  <ArrowLeft size={16} />
-                  Ja possui uma conta? Faca login
-                </Link>
-              </div>
             </div>
           </div>
         </section>

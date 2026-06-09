@@ -1,25 +1,25 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AgGridReact } from "ag-grid-react";
 import {
-  Search,
-  Filter,
-  UserPlus,
-  MoreVertical,
   AlertCircle,
   CheckCircle,
   Clock,
   FileText,
-  UserX,
   Mail,
+  MoreVertical,
+  Search,
+  UserPlus,
   Users,
+  UserX,
   X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
-  getAllAlunos,
-  getAllTccs,
-  getAllProfessores,
-  updateTcc,
   ApiError,
+  getAllAlunos,
+  getAllProfessores,
+  getAllTccs,
+  updateTcc,
 } from "../../services/api";
 
 function errMessage(e, fallback) {
@@ -40,21 +40,18 @@ function statusLabel(status) {
     case "ARQUIVADO":
       return "Arquivado";
     default:
-      return status ? String(status) : "â€”";
+      return status ? String(status) : "-";
   }
 }
 
 function uiStatusFromTcc(tcc) {
   if (!tcc) return { label: "Sem TCC", kind: "pendente" };
-
-  if (tcc.status === "APROVADO") return { label: "ConcluÃ­do", kind: "ok" };
+  if (tcc.status === "APROVADO") return { label: "Concluido", kind: "ok" };
   if (tcc.status === "REPROVADO") return { label: "Reprovado", kind: "bad" };
   if (tcc.status === "ARQUIVADO")
     return { label: "Arquivado", kind: "neutral" };
-
   if (!tcc.orientadorId)
     return { label: "Pendente (sem orientador)", kind: "pendente" };
-
   return { label: "Em andamento", kind: "ok" };
 }
 
@@ -63,17 +60,17 @@ function Modal({ open, title, onClose, children, footer }) {
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+        <div className="w-full max-w-xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div className="font-bold text-slate-800">{title}</div>
             <button
               type="button"
-              className="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
+              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
               onClick={onClose}
               title="Fechar"
             >
@@ -82,7 +79,7 @@ function Modal({ open, title, onClose, children, footer }) {
           </div>
           <div className="p-5">{children}</div>
           {footer ? (
-            <div className="px-5 py-4 border-t border-slate-200 bg-slate-50">
+            <div className="border-t border-slate-200 bg-slate-50 px-5 py-4">
               {footer}
             </div>
           ) : null}
@@ -93,6 +90,7 @@ function Modal({ open, title, onClose, children, footer }) {
 }
 
 export default function AlunosPage() {
+  const gridRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
@@ -126,17 +124,9 @@ export default function AlunosPage() {
     async function load() {
       try {
         setLoading(true);
-        const [a, t, p] = await Promise.all([
-          getAllAlunos(),
-          getAllTccs(),
-          getAllProfessores(),
-        ]);
-        if (!alive) return;
-        setAlunos(Array.isArray(a) ? a : []);
-        setTccs(Array.isArray(t) ? t : []);
-        setProfessores(Array.isArray(p) ? p : []);
+        await refresh();
       } catch (e) {
-        toast.error(errMessage(e, "Erro ao carregar alunos."));
+        if (alive) toast.error(errMessage(e, "Erro ao carregar alunos."));
       } finally {
         if (alive) setLoading(false);
       }
@@ -185,7 +175,7 @@ export default function AlunosPage() {
     return alunos.map((aluno) => {
       const tcc = tccByAlunoId.get(aluno.id);
       const orientador = tcc?.orientadorNome || null;
-      const tema = tcc?.titulo || "Ainda nÃ£o definido";
+      const tema = tcc?.titulo || "Ainda nao definido";
       const fase = tcc ? statusLabel(tcc.status) : "Inicial";
       const ui = uiStatusFromTcc(tcc);
 
@@ -203,53 +193,60 @@ export default function AlunosPage() {
     });
   }, [alunos, tccByAlunoId]);
 
-  const alunosFiltrados = rows.filter((aluno) => {
-    const passaBusca =
-      aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      String(aluno.matricula || "").includes(busca);
+  const alunosFiltrados = useMemo(() => {
+    const termo = busca.toLowerCase().trim();
 
-    const passaStatus =
-      filtroStatus === "Todos" ||
-      (filtroStatus === "Em Dia" &&
-        aluno.uiStatus.kind === "ok" &&
-        aluno.uiStatus.label === "Em andamento") ||
-      (filtroStatus === "Atrasado" && aluno.uiStatus.kind === "bad") ||
-      (filtroStatus === "Pendente" && aluno.uiStatus.kind === "pendente") ||
-      (filtroStatus === "ConcluÃ­do" && aluno.uiStatus.label === "ConcluÃ­do");
+    return rows.filter((aluno) => {
+      const passaBusca =
+        !termo ||
+        aluno.nome.toLowerCase().includes(termo) ||
+        String(aluno.matricula || "").includes(termo);
 
-    let passaOrientador = true;
-    if (filtroOrientador === "Sem Orientador")
-      passaOrientador = aluno.orientador === null;
-    else if (filtroOrientador === "Com Orientador")
-      passaOrientador = aluno.orientador !== null;
+      const passaStatus =
+        filtroStatus === "Todos" ||
+        (filtroStatus === "Em Dia" &&
+          aluno.uiStatus.kind === "ok" &&
+          aluno.uiStatus.label === "Em andamento") ||
+        (filtroStatus === "Atrasado" && aluno.uiStatus.kind === "bad") ||
+        (filtroStatus === "Pendente" &&
+          aluno.uiStatus.kind === "pendente") ||
+        (filtroStatus === "Concluido" &&
+          aluno.uiStatus.label === "Concluido");
 
-    return passaBusca && passaStatus && passaOrientador;
-  });
+      let passaOrientador = true;
+      if (filtroOrientador === "Sem Orientador")
+        passaOrientador = aluno.orientador === null;
+      else if (filtroOrientador === "Com Orientador")
+        passaOrientador = aluno.orientador !== null;
+
+      return passaBusca && passaStatus && passaOrientador;
+    });
+  }, [rows, busca, filtroStatus, filtroOrientador]);
 
   const renderStatus = (ui) => {
-    if (ui.label === "ConcluÃ­do") {
+    if (ui.label === "Concluido") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#359830]/10 text-[#1f5a1b]">
-          <CheckCircle size={12} className="mr-1" /> ConcluÃ­do
+        <span className="inline-flex items-center rounded-full bg-[#c7f1dd] px-2 py-0.5 text-[11px] font-semibold text-[#087a3d]">
+          <CheckCircle size={12} className="mr-1" /> Concluido
         </span>
       );
     }
     if (ui.kind === "bad") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
           <AlertCircle size={12} className="mr-1" /> {ui.label}
         </span>
       );
     }
     if (ui.kind === "pendente") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span className="inline-flex items-center rounded-full bg-[#ffe9b0] px-2 py-0.5 text-[11px] font-semibold text-[#9a5b00]">
           <Clock size={12} className="mr-1" /> Pendente
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+      <span className="inline-flex items-center rounded-full bg-[#c7f1dd] px-2 py-0.5 text-[11px] font-semibold text-[#087a3d]">
         <CheckCircle size={12} className="mr-1" /> Em andamento
       </span>
     );
@@ -259,8 +256,8 @@ export default function AlunosPage() {
     const tcc = alunoRow.tcc;
     if (!tcc?.id) {
       toast(
-        "Esse aluno ainda nÃ£o tem TCC para vincular orientador. (Hoje o vÃ­nculo Ã© no TCC.)",
-        { icon: "â„¹ï¸" },
+        "Esse aluno ainda nao tem TCC para vincular orientador. Hoje o vinculo e feito no TCC.",
+        { icon: "i" },
       );
       return;
     }
@@ -280,7 +277,7 @@ export default function AlunosPage() {
     }
 
     if (coorientadorId && coorientadorId === orientadorId) {
-      toast.error("Coorientador nÃ£o pode ser igual ao orientador.");
+      toast.error("Coorientador nao pode ser igual ao orientador.");
       return;
     }
 
@@ -307,253 +304,258 @@ export default function AlunosPage() {
     }
   }
 
+  const columnDefs = useMemo(
+    () => [
+      {
+        headerName: "Aluno",
+        field: "nome",
+        minWidth: 230,
+        flex: 1.25,
+        cellRenderer: ({ data }) => {
+          if (!data) return null;
+          return (
+            <span className="block truncate text-[12px] font-normal text-blue-700">
+              {data.nome}
+            </span>
+          );
+        },
+      },
+      {
+        headerName: "Matricula",
+        field: "matricula",
+        width: 135,
+      },
+      {
+        headerName: "Orientador",
+        field: "orientador",
+        minWidth: 190,
+        flex: 1,
+        valueGetter: ({ data }) => data?.orientador || "Sem orientador",
+        cellRenderer: ({ data }) => {
+          if (!data) return null;
+          return data.orientador ? (
+            <span className="truncate text-[12px] font-normal text-black">
+              {data.orientador}
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+              <UserX size={14} className="mr-1" /> Sem orientador
+            </span>
+          );
+        },
+      },
+      {
+        headerName: "Fase atual",
+        field: "fase",
+        width: 165,
+      },
+      {
+        headerName: "Tema",
+        field: "tema",
+        minWidth: 240,
+        flex: 1.15,
+      },
+      {
+        headerName: "Status",
+        field: "uiStatus.label",
+        width: 150,
+        cellRenderer: ({ data }) => (data ? renderStatus(data.uiStatus) : null),
+      },
+      {
+        headerName: "Acoes",
+        field: "actions",
+        width: 120,
+        sortable: false,
+        filter: false,
+        floatingFilter: false,
+        cellRenderer: ({ data }) => {
+          if (!data) return null;
+          return (
+            <div className="flex h-full items-center justify-end gap-1">
+              <button
+                type="button"
+                title="Definir orientador"
+                className="rounded p-1 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                onClick={() => openOrientadorModal(data)}
+              >
+                <Users size={16} />
+              </button>
+
+              <button
+                type="button"
+                title="Copiar e-mail"
+                className="rounded p-1 text-slate-500 transition-colors hover:bg-[#359830]/10 hover:text-[#359830]"
+                onClick={() => {
+                  if (data.email && navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(data.email);
+                    toast.success("E-mail copiado.");
+                  } else {
+                    toast.error("Nao foi possivel copiar o e-mail.");
+                  }
+                }}
+              >
+                <Mail size={16} />
+              </button>
+
+              <button
+                type="button"
+                title="Opcoes"
+                className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                onClick={() =>
+                  toast(
+                    "Acoes extras: editar aluno, reset senha, etc. (proximo passo).",
+                    { icon: "i" },
+                  )
+                }
+              >
+                <MoreVertical size={16} />
+              </button>
+            </div>
+          );
+        },
+      },
+    ],
+    [],
+  );
+
+  const defaultColDef = useMemo(
+    () => ({
+      filter: true,
+      floatingFilter: true,
+      resizable: true,
+      sortable: true,
+      suppressHeaderMenuButton: true,
+    }),
+    [],
+  );
+
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-10 text-center text-slate-500">
+      <div className="mx-auto max-w-7xl p-10 text-center text-slate-500">
         Carregando alunos...
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">
-            GestÃ£o de Alunos
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Dados reais de alunos + TCC (quando existir).
-          </p>
-        </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <button
-            type="button"
-            className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm"
-            onClick={() =>
-              toast("ExportaÃ§Ã£o CSV pode ser implementada depois.", {
-                icon: "â„¹ï¸",
-              })
-            }
-          >
-            <FileText size={18} className="mr-2" /> Exportar CSV
-          </button>
-          <button
-            type="button"
-            className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-[#359830] text-white font-medium rounded-lg hover:bg-[#2a7725] transition-colors text-sm shadow-sm"
-            onClick={() =>
-              toast(
-                "Fluxo de criaÃ§Ã£o administrativa: use o cadastro pÃºblico ou crie endpoint dedicado.",
-                { icon: "â„¹ï¸" },
-              )
-            }
-          >
-            <UserPlus size={18} className="mr-2" /> Novo Aluno
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative w-full md:flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-slate-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar por nome ou matrÃ­cula..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#359830] focus:border-[#359830] sm:text-sm text-slate-900 outline-none transition-colors"
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-          <div className="flex items-center w-full sm:w-auto">
-            <Filter size={18} className="mr-2 text-slate-400" />
-            <select
-              value={filtroOrientador}
-              onChange={(e) => setFiltroOrientador(e.target.value)}
-              className="block w-full sm:w-48 pl-3 pr-8 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#359830] focus:border-[#359830] sm:text-sm text-slate-900 outline-none transition-colors bg-white"
-            >
-              <option value="Todos">Todos os Orientadores</option>
-              <option value="Com Orientador">Com Orientador</option>
-              <option value="Sem Orientador">Sem Orientador (Pendentes)</option>
-            </select>
-          </div>
-
-          <select
-            value={filtroStatus}
-            onChange={(e) => setFiltroStatus(e.target.value)}
-            className="block w-full sm:w-40 pl-3 pr-8 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#359830] focus:border-[#359830] sm:text-sm text-slate-900 outline-none transition-colors bg-white"
-          >
-            <option value="Todos">Todos os Status</option>
-            <option value="Em Dia">Em andamento</option>
-            <option value="Atrasado">Reprovado</option>
-            <option value="Pendente">Pendente</option>
-            <option value="ConcluÃ­do">ConcluÃ­do</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Aluno
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Orientador
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">
-                  Fase Atual
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  AÃ§Ãµes
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
-              {alunosFiltrados.length > 0 ? (
-                alunosFiltrados.map((aluno) => (
-                  <tr
-                    key={aluno.id}
-                    className="hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 shrink-0 rounded-full bg-[#359830]/10 flex items-center justify-center text-[#2a7725] font-bold uppercase">
-                          {aluno.nome?.charAt(0)}
-                          {aluno.nome?.split(" ")?.[1]?.charAt(0)}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-bold text-slate-800">
-                            {aluno.nome}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Mat: {aluno.matricula}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {aluno.orientador ? (
-                        <div className="text-sm text-slate-800 font-medium">
-                          {aluno.orientador}
-                        </div>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                          <UserX size={14} className="mr-1" /> Sem orientador
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <div className="text-sm text-slate-600">{aluno.fase}</div>
-                      <div
-                        className="text-xs text-slate-400 truncate max-w-[260px]"
-                        title={aluno.tema}
-                      >
-                        {aluno.tema}
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-1">
-                        {aluno.tcc?.id ? "TCC cadastrado" : "Sem TCC"}
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {renderStatus(aluno.uiStatus)}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end items-center gap-2">
-                        <button
-                          type="button"
-                          title="Definir orientador"
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-600/10 rounded-md transition-colors"
-                          onClick={() => openOrientadorModal(aluno)}
-                        >
-                          <Users size={18} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Copiar e-mail"
-                          className="p-1.5 text-slate-400 hover:text-[#359830] hover:bg-[#359830]/10 rounded-md transition-colors"
-                          onClick={() => {
-                            if (aluno.email)
-                              navigator.clipboard?.writeText(aluno.email);
-                            toast.success(
-                              "E-mail copiado (se o navegador permitir).",
-                            );
-                          }}
-                        >
-                          <Mail size={18} />
-                        </button>
-                        <button
-                          type="button"
-                          title="OpÃ§Ãµes"
-                          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-                          onClick={() =>
-                            toast(
-                              "AÃ§Ãµes extras: editar aluno, reset senha, etc. (prÃ³ximo passo).",
-                              { icon: "â„¹ï¸" },
-                            )
-                          }
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
-                    <AlertCircle className="mx-auto h-12 w-12 text-slate-300 mb-3" />
-                    <h3 className="text-lg font-medium text-slate-900">
-                      Nenhum aluno encontrado
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Ajuste os filtros de busca para encontrar o que procura.
-                    </p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {alunosFiltrados.length > 0 && (
-          <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-            <span className="text-sm text-slate-500">
-              Mostrando{" "}
-              <span className="font-medium">{alunosFiltrados.length}</span> de{" "}
-              <span className="font-medium">{rows.length}</span> alunos
-            </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="px-3 py-1 border border-slate-300 rounded-md bg-white text-slate-600 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
-                disabled
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                className="px-3 py-1 border border-slate-300 rounded-md bg-white text-slate-600 text-sm font-medium hover:bg-slate-50"
-                disabled
-              >
-                PrÃ³xima
-              </button>
+    <div className="mx-0 max-w-none space-y-3">
+      <div className="rounded-lg border border-slate-200 bg-white px-7 py-4 shadow-sm">
+        <div className="grid gap-4 lg:grid-cols-[300px_1fr] lg:items-end">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Buscar aluno
+            </label>
+            <div className="relative w-full">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Nome ou matricula"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="h-10 w-full rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+              />
             </div>
           </div>
-        )}
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-sm font-medium text-slate-700">
+                Mostrando:{" "}
+                <span className="font-semibold text-slate-950">
+                  {alunosFiltrados.length} de {rows.length}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-5 text-sm">
+                <button
+                  type="button"
+                  className="inline-flex items-center text-slate-500 transition hover:text-slate-900 disabled:text-slate-300"
+                  onClick={() => {
+                    if (!alunosFiltrados.length) {
+                      toast.error("Nao ha alunos para exportar.");
+                      return;
+                    }
+                    gridRef.current?.api?.exportDataAsCsv({
+                      fileName: "alunos-finaliza-tcc.csv",
+                    });
+                    toast.success("CSV exportado.");
+                  }}
+                >
+                  <FileText size={16} className="mr-1.5" /> Exportar CSV
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center text-slate-500 transition hover:text-slate-900"
+                  onClick={() =>
+                    toast(
+                      "Fluxo de criacao administrativa: use o cadastro publico ou crie endpoint dedicado.",
+                      { icon: "i" },
+                    )
+                  }
+                >
+                  <UserPlus size={16} className="mr-1.5" /> Novo Aluno
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <select
+                value={filtroOrientador}
+                onChange={(e) => setFiltroOrientador(e.target.value)}
+                className="h-10 rounded border border-slate-300 bg-white pl-3 pr-8 text-sm text-slate-900 outline-none focus:border-slate-500 sm:w-52"
+              >
+                <option value="Todos">Todos os Orientadores</option>
+                <option value="Com Orientador">Com Orientador</option>
+                <option value="Sem Orientador">Sem Orientador</option>
+              </select>
+
+              <select
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value)}
+                className="h-10 rounded border border-slate-300 bg-white pl-3 pr-8 text-sm text-slate-900 outline-none focus:border-slate-500 sm:w-40"
+              >
+                <option value="Todos">Todos os Status</option>
+                <option value="Em Dia">Em andamento</option>
+                <option value="Atrasado">Reprovado</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Concluido">Concluido</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white shadow-sm">
+        <div className="ag-theme-balham finaliza-ag-grid finaliza-ag-grid-compact h-[590px] w-full">
+          <AgGridReact
+            ref={gridRef}
+            rowData={alunosFiltrados}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            rowHeight={32}
+            headerHeight={34}
+            floatingFiltersHeight={36}
+            animateRows
+            pagination
+            paginationPageSize={12}
+            paginationPageSizeSelector={[12, 25, 50, 100]}
+            rowSelection={{
+              mode: "multiRow",
+              checkboxes: true,
+              headerCheckbox: true,
+            }}
+            overlayNoRowsTemplate="<span class='ag-empty-state'>Nenhum aluno encontrado. Ajuste os filtros de busca.</span>"
+            getRowId={({ data }) => String(data.id)}
+            getRowClass={({ data }) => {
+              if (!data) return "";
+              if (data.uiStatus.kind === "ok") return "row-status-ok";
+              if (data.uiStatus.kind === "bad") return "row-status-bad";
+              return "";
+            }}
+          />
+        </div>
       </div>
 
       <Modal
@@ -568,14 +570,17 @@ export default function AlunosPage() {
                   <span className="font-semibold text-slate-700">
                     {modalAluno.nome}
                   </span>{" "}
-                  â€ • <span className="font-semibold text-slate-700">{modalTcc?.titulo || "TCC cadastrado"}</span>
+                  -{" "}
+                  <span className="font-semibold text-slate-700">
+                    {modalTcc?.titulo || "TCC cadastrado"}
+                  </span>
                 </>
               ) : null}
             </div>
             <div className="flex gap-2">
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                 onClick={() => setModalOpen(false)}
                 disabled={modalSaving}
               >
@@ -583,7 +588,7 @@ export default function AlunosPage() {
               </button>
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-lg bg-[#359830] px-4 py-2 text-sm font-bold text-white hover:bg-[#2a7725] disabled:opacity-50"
                 onClick={saveOrientador}
                 disabled={modalSaving}
               >
@@ -600,13 +605,13 @@ export default function AlunosPage() {
         ) : (
           <div className="space-y-4">
             <div>
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                Orientador (obrigatÃ³rio)
+              <div className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+                Orientador (obrigatorio)
               </div>
               <select
                 value={orientadorId}
                 onChange={(e) => setOrientadorId(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white text-sm"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#359830]"
               >
                 <option value="">Selecione...</option>
                 {profOptions.map((p) => (
@@ -619,13 +624,13 @@ export default function AlunosPage() {
             </div>
 
             <div>
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+              <div className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">
                 Coorientador (opcional)
               </div>
               <select
                 value={coorientadorId}
                 onChange={(e) => setCoorientadorId(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white text-sm"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#359830]"
               >
                 <option value="">Nenhum</option>
                 {profOptions.map((p) => (
@@ -635,7 +640,7 @@ export default function AlunosPage() {
                   </option>
                 ))}
               </select>
-              <div className="text-xs text-slate-500 mt-2">
+              <div className="mt-2 text-xs text-slate-500">
                 Observacao: o vinculo e feito no TCC via PUT /api/tccs/:id.
               </div>
             </div>
@@ -645,5 +650,3 @@ export default function AlunosPage() {
     </div>
   );
 }
-
-

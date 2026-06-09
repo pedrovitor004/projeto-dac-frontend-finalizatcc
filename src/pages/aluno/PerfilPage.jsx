@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { getAluno, updateAluno } from "../../services/api";
 
@@ -46,12 +46,7 @@ export default function PerfilPage() {
         });
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Erro ao carregar",
-          text: "Nao foi possivel carregar os dados do perfil.",
-          confirmButtonColor: "#359830",
-        });
+        toast.error("Nao foi possivel carregar os dados do perfil.");
       } finally {
         setLoading(false);
       }
@@ -92,22 +87,12 @@ export default function PerfilPage() {
     const periodo = Number(form.periodo);
 
     if (!form.nome.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Nome obrigatorio",
-        text: "Informe seu nome completo.",
-        confirmButtonColor: "#359830",
-      });
+      toast.error("Informe seu nome completo.");
       return;
     }
 
     if (!Number.isFinite(periodo) || periodo <= 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Periodo invalido",
-        text: "Informe um periodo valido.",
-        confirmButtonColor: "#359830",
-      });
+      toast.error("Informe um periodo valido.");
       return;
     }
 
@@ -130,19 +115,9 @@ export default function PerfilPage() {
       });
       updateUser({ nome: nextAluno.nome || payload.nome });
 
-      Swal.fire({
-        icon: "success",
-        title: "Perfil atualizado",
-        text: "Suas informacoes foram salvas com sucesso.",
-        confirmButtonColor: "#359830",
-      });
+      toast.success("Perfil atualizado com sucesso.");
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Erro ao salvar",
-        text: error?.message || "Nao foi possivel atualizar seu perfil.",
-        confirmButtonColor: "#359830",
-      });
+      toast.error(error?.message || "Nao foi possivel atualizar seu perfil.");
     } finally {
       setSalvandoPerfil(false);
     }
@@ -152,22 +127,12 @@ export default function PerfilPage() {
     e.preventDefault();
 
     if (!senhas.atual || !senhas.nova) {
-      Swal.fire({
-        icon: "error",
-        title: "Campos vazios",
-        text: "Por favor, preencha a senha atual e a nova senha.",
-        confirmButtonColor: "#359830",
-      });
+      toast.error("Preencha a senha atual e a nova senha.");
       return;
     }
 
     if (senhas.nova !== senhas.confirmacao) {
-      Swal.fire({
-        icon: "warning",
-        title: "Senhas diferentes",
-        text: "A nova senha e a confirmacao nao coincidem.",
-        confirmButtonColor: "#359830",
-      });
+      toast.error("A nova senha e a confirmacao nao coincidem.");
       return;
     }
 
@@ -175,12 +140,10 @@ export default function PerfilPage() {
 
     setTimeout(() => {
       setSalvandoSenha(false);
-      Swal.fire({
-        icon: "info",
-        title: "Modulo de Seguranca",
-        text: "A alteracao de senha via painel do aluno sera habilitada apos a proxima manutencao programada.",
-        confirmButtonColor: "#359830",
-      });
+      toast(
+        "A alteracao de senha pelo painel do aluno sera habilitada apos a proxima manutencao programada.",
+        { icon: "i" },
+      );
       setSenhas({ atual: "", nova: "", confirmacao: "" });
     }, 1000);
   };

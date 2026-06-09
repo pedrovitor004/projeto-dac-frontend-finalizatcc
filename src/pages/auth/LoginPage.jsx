@@ -1,12 +1,26 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { BookOpenCheck, Loader2, Lock, LogIn, Mail } from "lucide-react";
+import {
+  BookOpenCheck,
+  CalendarClock,
+  FileCheck2,
+  Loader2,
+  Lock,
+  LogIn,
+  Mail,
+} from "lucide-react";
 import finalizaTccLogo from "../../assets/Group (1).png";
 import { useAuth } from "../../contexts/AuthContext";
 
 const inputClass =
-  "h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-[#359830] focus:ring-2 focus:ring-[#359830]/20 disabled:bg-slate-100 disabled:text-slate-400";
+  "h-11 w-full rounded-lg border border-white/35 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-white focus:ring-4 focus:ring-white/20 disabled:bg-white/80 disabled:text-slate-400";
+
+const milestones = [
+  { Icon: FileCheck2, label: "Submissoes" },
+  { Icon: BookOpenCheck, label: "Orientacoes" },
+  { Icon: CalendarClock, label: "Bancas" },
+];
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,7 +43,9 @@ export default function LoginPage() {
 
     try {
       const userData = await login(email, senha);
-      toast.success(`Bem-vindo, ${userData.nome?.split(" ")?.[0] || "usuario"}!`);
+      toast.success(
+        `Bem-vindo, ${userData.nome?.split(" ")?.[0] || "usuario"}!`,
+      );
       handleRedirect(userData.tipo);
     } catch {
       toast.error("E-mail ou senha invalidos.");
@@ -39,81 +55,107 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="grid min-h-screen lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="hidden bg-[#359830] px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white">
+    <main className="auth-screen min-h-screen bg-[#f6f8f5] text-slate-900">
+      <div className="grid min-h-screen lg:grid-cols-[1.02fr_0.98fr]">
+        <section className="auth-hero-panel relative hidden overflow-hidden border-r border-slate-200 bg-[#f8faf7] px-10 py-8 lg:flex lg:flex-col">
+          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d32f2f_0_15%,#359830_15%_58%,#2f855a_58%_100%)]" />
+          <div className="flex items-center gap-4">
+            <span className="flex h-20 w-20 items-center justify-center rounded-lg border border-[#359830]/20 bg-white shadow-sm">
               <img
                 src={finalizaTccLogo}
                 alt="Finaliza TCC"
-                className="h-8 w-8 object-contain"
+                className="h-16 w-16 object-contain"
               />
-            </div>
+            </span>
             <div>
-              <p className="text-lg font-bold leading-none">Finaliza TCC</p>
-              <p className="mt-1 text-sm text-white/75">Gestao academica</p>
+              <p className="text-2xl font-bold leading-none text-[#23731f]">
+                Finaliza TCC
+              </p>
+              <p className="mt-2 text-base font-medium text-[#2f8f2b]">
+                Gestao academica de TCC
+              </p>
             </div>
           </div>
 
-          <div className="max-w-xl">
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-white/12">
-              <BookOpenCheck size={30} />
+          <div className="flex flex-1 items-center">
+            <div className="max-w-xl">
+              <p className="text-sm font-semibold uppercase tracking-wide text-[#2a7a26]">
+                Sala de acompanhamento
+              </p>
+              <h1 className="mt-3 text-4xl font-bold leading-tight text-slate-950">
+                Um lugar tranquilo para organizar cada etapa do TCC.
+              </h1>
+              <p className="mt-5 max-w-lg text-base leading-7 text-slate-600">
+                Alunos, professores e coordenadores acompanham prazos, arquivos,
+                orientacoes e bancas em um fluxo unico.
+              </p>
+
+              <div className="mt-9 grid max-w-lg grid-cols-3 gap-3">
+                {milestones.map(({ Icon, label }) => (
+                  <div
+                    key={label}
+                    className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#359830]/35 hover:shadow-md"
+                  >
+                    {React.createElement(Icon, {
+                      size: 20,
+                      className: "text-[#359830]",
+                    })}
+                    <p className="mt-3 text-sm font-semibold text-slate-700">
+                      {label}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 className="text-4xl font-bold leading-tight">
-              Controle o ciclo de TCCs com clareza, prazo e rastreabilidade.
-            </h1>
-            <p className="mt-5 text-base leading-7 text-white/80">
-              Uma area unica para submissao de arquivos, acompanhamento de
-              orientacoes, feedbacks e bancas do IFPB.
-            </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 border-t border-white/15 pt-6 text-sm text-white/80">
-            <span>Submissoes</span>
-            <span>Feedbacks</span>
-            <span>Bancas</span>
+          <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+            Finaliza TCC aproxima o acompanhamento academico da rotina real de
+            quem esta concluindo o curso.
           </div>
         </section>
 
         <section className="flex items-center justify-center px-5 py-10 sm:px-8">
           <div className="w-full max-w-md">
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#359830]/25 bg-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#359830]/20 bg-white shadow-sm">
                 <img
                   src={finalizaTccLogo}
                   alt="Finaliza TCC"
                   className="h-8 w-8 object-contain"
                 />
-              </div>
+              </span>
               <div>
-                <p className="text-lg font-bold text-[#2a7a26]">Finaliza TCC</p>
-                <p className="text-sm text-slate-500">Gestao academica</p>
+                <p className="text-lg font-bold text-slate-950">Finaliza TCC</p>
+                <p className="text-sm text-slate-500">
+                  Gestao academica de TCC
+                </p>
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="auth-card-enter auth-form-card rounded-lg border border-[#2f8f2b] bg-[#2f8f2b] p-6 text-white shadow-[0_30px_90px_rgb(31_102_28/0.28)] sm:p-8">
               <div className="mb-7">
-                <p className="text-sm font-semibold uppercase tracking-wide text-[#359830]">
+                <p className="text-sm font-semibold uppercase tracking-wide text-white/80">
                   Acesso ao sistema
                 </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                <h2 className="mt-2 text-2xl font-bold text-white">
                   Entre na sua conta
                 </h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Use suas credenciais para acessar o painel do Finaliza TCC.
+                <p className="mt-2 text-sm leading-6 text-white/78">
+                  Continue seu acompanhamento academico pelo painel do Finaliza
+                  TCC.
                 </p>
               </div>
 
               <form className="space-y-5" onSubmit={handleSubmit}>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                    E-mail institucional
+                  <label className="mb-1.5 block text-sm font-medium text-white/90">
+                    E-mail
                   </label>
                   <div className="relative">
                     <Mail
                       size={18}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2f8f2b]"
                     />
                     <input
                       type="email"
@@ -128,13 +170,13 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  <label className="mb-1.5 block text-sm font-medium text-white/90">
                     Senha
                   </label>
                   <div className="relative">
                     <Lock
                       size={18}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2f8f2b]"
                     />
                     <input
                       type="password"
@@ -151,7 +193,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || !email || !senha}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#359830] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2a7a26] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-[#23731f] shadow-sm transition hover:bg-[#eef8ed] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? (
                     <>
@@ -167,11 +209,11 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              <div className="mt-6 border-t border-slate-100 pt-5 text-center text-sm">
-                <span className="text-slate-500">Nao tem conta? </span>
+              <div className="mt-6 border-t border-white/20 pt-5 text-center text-sm">
+                <span className="text-white/78">Ainda nao tem conta? </span>
                 <Link
                   to="/register"
-                  className="font-semibold text-[#2a7a26] hover:text-[#359830]"
+                  className="font-semibold text-white underline-offset-4 transition hover:underline"
                 >
                   Cadastre-se
                 </Link>
